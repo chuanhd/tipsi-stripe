@@ -171,8 +171,10 @@
 - (void)setCardParams:(STPCardParams *)cardParams {
     // Remove delegate before update paymentCardTextField with prefilled card
     // for preventing call paymentCardTextFieldDidChange for every fields
+    STPPaymentMethodCardParams * paymentMethodCardParams = [[STPPaymentMethodCardParams alloc] initWithCardSourceParams:cardParams];
+    
     _paymentCardTextField.delegate = nil;
-    [_paymentCardTextField setCardParams:cardParams];
+    [_paymentCardTextField setCardParams:paymentMethodCardParams];
     _paymentCardTextField.delegate = self;
     // call paymentCardTextFieldDidChange for update RN
     [self paymentCardTextFieldDidChange:nil];
@@ -192,14 +194,16 @@
     if (!_onChange) {
         return;
     }
+    
+    NSMutableDictionary * params = [NSMutableDictionary dictionary];
+    [params setValue:_paymentCardTextField.cardParams.number?:@"" forKey:@"number"];
+    [params setValue:_paymentCardTextField.cardParams.expMonth forKey:@"expMonth"];
+    [params setValue:_paymentCardTextField.cardParams.expYear forKey:@"expYear"];
+    [params setValue:_paymentCardTextField.cardParams.cvc?:@"" forKey:@"cvc"];
+    
     _onChange(@{
                 @"valid": @(_paymentCardTextField.isValid),
-                @"params": @{
-                        @"number": _paymentCardTextField.cardParams.number?:@"",
-                        @"expMonth": @(_paymentCardTextField.cardParams.expMonth),
-                        @"expYear": @(_paymentCardTextField.cardParams.expYear),
-                        @"cvc": _paymentCardTextField.cardParams.cvc?:@""
-                        }
+                @"params": params
                 });
 }
 
