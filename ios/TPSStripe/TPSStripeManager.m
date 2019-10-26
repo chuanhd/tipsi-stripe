@@ -796,6 +796,13 @@ RCT_EXPORT_METHOD(openApplePaySetup) {
         NSString *mandateURL = source.sepaDebitDetails.mandateURL.absoluteString;
         [sepaDebitDetails setValue:mandateURL forKey:@"mandateURL"];
     }
+    
+    if (source.weChatPayDetails) {
+        NSMutableDictionary *wechatPayDetails = [NSMutableDictionary dictionary];
+        [result setValue:wechatPayDetails forKey:@"wechat"];
+        
+        [wechatPayDetails setValue:source.weChatPayDetails.weChatAppURL forKey:@"qr_code_url"];
+    }
 
     return result;
 }
