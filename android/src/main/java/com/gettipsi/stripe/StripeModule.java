@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.facebook.react.bridge.ActivityEventListener;
@@ -20,12 +20,13 @@ import com.gettipsi.stripe.util.ArgCheck;
 import com.gettipsi.stripe.util.Converters;
 import com.gettipsi.stripe.util.Fun0;
 import com.google.android.gms.wallet.WalletConstants;
-import com.stripe.android.SourceCallback;
+import com.stripe.android.ApiResultCallback;
 import com.stripe.android.Stripe;
-import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Source;
 import com.stripe.android.model.SourceParams;
 import com.stripe.android.model.Token;
+
+import org.jetbrains.annotations.NotNull;
 
 import static com.gettipsi.stripe.Errors.*;
 import static com.gettipsi.stripe.util.Converters.convertSourceToWritableMap;
@@ -149,18 +150,18 @@ public class StripeModule extends ReactContextBaseJavaModule {
       ArgCheck.nonNull(mStripe);
       ArgCheck.notEmptyString(mPublicKey);
 
-      mStripe.createToken(
-        createCard(cardData),
-        mPublicKey,
-        new TokenCallback() {
-          public void onSuccess(Token token) {
-            promise.resolve(convertTokenToWritableMap(token));
-          }
-          public void onError(Exception error) {
-            error.printStackTrace();
-            promise.reject(toErrorCode(error), error.getMessage());
-          }
-        });
+      mStripe.createToken(createCard(cardData), new ApiResultCallback<Token>() {
+        @Override
+        public void onSuccess(Token token) {
+          promise.resolve(convertTokenToWritableMap(token));
+        }
+
+        @Override
+        public void onError(@NotNull Exception error) {
+          error.printStackTrace();
+          promise.reject(toErrorCode(error), error.getMessage());
+        }
+      });
     } catch (Exception e) {
       promise.reject(toErrorCode(e), e.getMessage());
     }
@@ -172,19 +173,18 @@ public class StripeModule extends ReactContextBaseJavaModule {
       ArgCheck.nonNull(mStripe);
       ArgCheck.notEmptyString(mPublicKey);
 
-      mStripe.createBankAccountToken(
-        createBankAccount(accountData),
-        mPublicKey,
-        null,
-        new TokenCallback() {
-          public void onSuccess(Token token) {
-            promise.resolve(convertTokenToWritableMap(token));
-          }
-          public void onError(Exception error) {
-            error.printStackTrace();
-            promise.reject(toErrorCode(error), error.getMessage());
-          }
-        });
+      mStripe.createBankAccountToken(createBankAccount(accountData), new ApiResultCallback<Token>() {
+        @Override
+        public void onSuccess(Token token) {
+          promise.resolve(convertTokenToWritableMap(token));
+        }
+
+        @Override
+        public void onError(@NotNull Exception error) {
+          error.printStackTrace();
+          promise.reject(toErrorCode(error), error.getMessage());
+        }
+      });
     } catch (Exception e) {
       promise.reject(toErrorCode(e), e.getMessage());
     }
@@ -274,6 +274,12 @@ public class StripeModule extends ReactContextBaseJavaModule {
             options.getString("returnURL"),
             options.getString("card"));
         break;
+      case "wechat":
+        sourceParams = SourceParams.createWeChatPayParams(options.getInt("amount"),
+                options.getString("currency"),
+                options.getString("appId"),
+                options.getString("statement_descriptor"));
+        break;
 			case "card":
 				sourceParams = SourceParams.createCardParams(Converters.createCard(options));
 		  	break;
@@ -281,33 +287,33 @@ public class StripeModule extends ReactContextBaseJavaModule {
 
     ArgCheck.nonNull(sourceParams);
 
-    mStripe.createSource(sourceParams, new SourceCallback() {
-      @Override
-      public void onError(Exception error) {
-        promise.reject(toErrorCode(error));
-      }
-
+    mStripe.createSource(sourceParams, new ApiResultCallback<Source>() {
       @Override
       public void onSuccess(Source source) {
-        if (Source.REDIRECT.equals(source.getFlow())) {
+        if (Source.SourceFlow.REDIRECT.equals(source.getFlow())) {
           Activity currentActivity = getCurrentActivity();
           if (currentActivity == null) {
             promise.reject(
-              getErrorCode(mErrorCodes, "activityUnavailable"),
-              getDescription(mErrorCodes, "activityUnavailable")
+                    getErrorCode(mErrorCodes, "activityUnavailable"),
+                    getDescription(mErrorCodes, "activityUnavailable")
             );
           } else {
             mCreateSourcePromise = promise;
             mCreatedSource = source;
             String redirectUrl = source.getRedirect().getUrl();
             Intent browserIntent = new Intent(currentActivity, OpenBrowserActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .putExtra(OpenBrowserActivity.EXTRA_URL, redirectUrl);
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .putExtra(OpenBrowserActivity.EXTRA_URL, redirectUrl);
             currentActivity.startActivity(browserIntent);
           }
         } else {
           promise.resolve(convertSourceToWritableMap(source));
         }
+      }
+
+      @Override
+      public void onError(@NotNull Exception error) {
+        promise.reject(toErrorCode(error));
       }
     });
   }
@@ -369,19 +375,18 @@ public class StripeModule extends ReactContextBaseJavaModule {
         }
 
         switch (source.getStatus()) {
-          case Source.CHARGEABLE:
-          case Source.CONSUMED:
+          case Source.SourceStatus.CHARGEABLE:
+          case Source.SourceStatus.CONSUMED:
             promise.resolve(convertSourceToWritableMap(source));
             break;
-          case Source.CANCELED:
+          case Source.SourceStatus.CANCELED:
             promise.reject(
               getErrorCode(mErrorCodes, "redirectCancelled"),
               getDescription(mErrorCodes, "redirectCancelled")
             );
             break;
-          case Source.PENDING:
-          case Source.FAILED:
-          case Source.UNKNOWN:
+          case Source.SourceStatus.PENDING:
+          case Source.SourceStatus.FAILED:
             promise.reject(
               getErrorCode(mErrorCodes, "redirectFailed"),
               getDescription(mErrorCodes, "redirectFailed")
