@@ -172,7 +172,6 @@
     // Remove delegate before update paymentCardTextField with prefilled card
     // for preventing call paymentCardTextFieldDidChange for every fields
     STPPaymentMethodCardParams * paymentMethodCardParams = [[STPPaymentMethodCardParams alloc] initWithCardSourceParams:cardParams];
-    
     _paymentCardTextField.delegate = nil;
     [_paymentCardTextField setCardParams:paymentMethodCardParams];
     _paymentCardTextField.delegate = self;

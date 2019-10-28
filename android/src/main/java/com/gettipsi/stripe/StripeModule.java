@@ -28,6 +28,8 @@ import com.stripe.android.model.Token;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+
 import static com.gettipsi.stripe.Errors.*;
 import static com.gettipsi.stripe.util.Converters.convertSourceToWritableMap;
 import static com.gettipsi.stripe.util.Converters.convertTokenToWritableMap;
@@ -278,11 +280,16 @@ public class StripeModule extends ReactContextBaseJavaModule {
         sourceParams = SourceParams.createWeChatPayParams(options.getInt("amount"),
                 options.getString("currency"),
                 options.getString("appId"),
-                options.getString("statement_descriptor"));
+                getStringOrNull(options,"statement_descriptor"));
         break;
 			case "card":
 				sourceParams = SourceParams.createCardParams(Converters.createCard(options));
 		  	break;
+    }
+
+    Map<String, String> metadata = Converters.createMetadata(options.getMap("metadata"));
+    if (metadata != null) {
+      sourceParams.setMetaData(metadata);
     }
 
     ArgCheck.nonNull(sourceParams);

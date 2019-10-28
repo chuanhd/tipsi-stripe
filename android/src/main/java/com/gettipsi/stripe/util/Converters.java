@@ -7,6 +7,8 @@ import android.text.TextUtils;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
@@ -27,6 +29,7 @@ import com.stripe.android.model.WeChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -66,11 +69,11 @@ public class Converters {
 
     billingContactMap.putString("emailAddress", emailAddress);
     shippingContactMap.putString("emailAddress", emailAddress);
-
+    
 
     extra.putMap("billingContact", billingContactMap);
     extra.putMap("shippingContact", shippingContactMap);
-
+    
     tokenMap.putMap("extra", extra);
 
     return tokenMap;
@@ -432,6 +435,32 @@ public class Converters {
     }
 
     return null;
+  }
+
+  public static Map<String, String> createMetadata(ReadableMap readableMetadata) {
+    Map<String, String> metadata = new HashMap<String, String>();
+
+    ReadableMapKeySetIterator iterator = readableMetadata.keySetIterator();
+    while (iterator.hasNextKey()) {
+      String key = iterator.nextKey();
+      ReadableType type = readableMetadata.getType(key);
+
+      switch (type) {
+        case String:
+          metadata.put(key, getStringOrNull(readableMetadata, key));
+          break;
+        case Number:
+          metadata.put(key, new StringBuilder().append(readableMetadata.getDouble(key)).toString());
+          break;
+        case Boolean:
+          metadata.put(key, new StringBuilder().append(readableMetadata.getBoolean(key)).toString());
+          break;
+        default: // metadata should contains only strings
+          break;
+      }
+    }
+
+    return metadata;
   }
 
 }
