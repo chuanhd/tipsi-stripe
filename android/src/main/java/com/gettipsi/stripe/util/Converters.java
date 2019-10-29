@@ -1,12 +1,14 @@
 package com.gettipsi.stripe.util;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
@@ -16,15 +18,18 @@ import com.google.android.gms.wallet.PaymentData;
 import com.stripe.android.model.Address;
 import com.stripe.android.model.BankAccount;
 import com.stripe.android.model.Card;
+import com.stripe.android.model.PaymentMethod;
 import com.stripe.android.model.Source;
 import com.stripe.android.model.SourceCodeVerification;
 import com.stripe.android.model.SourceOwner;
 import com.stripe.android.model.SourceReceiver;
 import com.stripe.android.model.SourceRedirect;
 import com.stripe.android.model.Token;
+import com.stripe.android.model.WeChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -81,7 +86,7 @@ public class Converters {
 
     result.putString("cardId", card.getId());
     result.putString("number", card.getNumber());
-    result.putString("cvc", card.getCVC() );
+    result.putString("cvc", card.getCvc() );
     result.putInt("expMonth", card.getExpMonth() );
     result.putInt("expYear", card.getExpYear() );
     result.putString("name", card.getName() );
@@ -179,28 +184,22 @@ public class Converters {
   }
 
   public static Card createCard(final ReadableMap cardData) {
-    return new Card(
-      // required fields
-      cardData.getString("number"),
-      cardData.getInt("expMonth"),
-      cardData.getInt("expYear"),
-      // additional fields
-      getValue(cardData, "cvc"),
-      getValue(cardData, "name"),
-      getValue(cardData, "addressLine1"),
-      getValue(cardData, "addressLine2"),
-      getValue(cardData, "addressCity"),
-      getValue(cardData, "addressState"),
-      getValue(cardData, "addressZip"),
-      getValue(cardData, "addressCountry"),
-      getValue(cardData, "brand"),
-      getValue(cardData, "last4"),
-      getValue(cardData, "fingerprint"),
-      getValue(cardData, "funding"),
-      getValue(cardData, "country"),
-      getValue(cardData, "currency"),
-      getValue(cardData, "id")
-    );
+    Card.Builder builder = new Card.Builder(cardData.getString("number"), cardData.getInt("expMonth"), cardData.getInt("expYear"), getValue(cardData, "cvc"));
+    builder.name(getValue(cardData, "name"));
+    builder.addressLine1(getValue(cardData, "addressLine1"));
+    builder.addressLine2(getValue(cardData, "addressLine2"));
+    builder.addressCity(getValue(cardData, "addressCity"));
+    builder.addressState(getValue(cardData, "addressState"));
+    builder.addressZip(getValue(cardData, "addressZip"));
+    builder.addressCountry(getValue(cardData, "addressCountry"));
+    builder.brand(getValue(cardData, "brand"));
+    builder.last4(getValue(cardData, "last4"));
+    builder.fingerprint(getValue(cardData, "fingerprint"));
+    builder.funding( getValue(cardData, "funding"));
+    builder.country(getValue(cardData, "country"));
+    builder.currency(getValue(cardData, "currency"));
+    builder.id(getValue(cardData, "id"));
+    return builder.build();
   }
 
 
@@ -229,6 +228,10 @@ public class Converters {
     newSource.putString("type", source.getType());
     newSource.putString("typeRaw", source.getTypeRaw());
     newSource.putString("usage", source.getUsage());
+
+    if (source.getType() == Source.SourceType.WECHAT) {
+      newSource.putMap("wechat", convertWechatToWritableMap(source.getWeChat()));
+    }
 
     return newSource;
   }
@@ -332,6 +335,19 @@ public class Converters {
   }
 
   @NonNull
+  public static WritableMap convertWechatToWritableMap(@Nullable WeChat weChat) {
+    WritableMap map = Arguments.createMap();
+
+    if (weChat == null) {
+      return map;
+    }
+
+    map.putString("qr_code_url", weChat.getQrCodeUrl());
+
+    return map;
+  }
+
+  @NonNull
   public static WritableMap mapToWritableMap(@Nullable Map<String, Object> map){
     WritableMap writableMap = Arguments.createMap();
 
@@ -397,8 +413,8 @@ public class Converters {
       accountData.getString("currency"),
       getValue(accountData, "routingNumber", "")
     );
-    account.setAccountHolderName(getValue(accountData, "accountHolderName"));
-    account.setAccountHolderType(getValue(accountData, "accountHolderType"));
+//    account.setAccountHolderName(getValue(accountData, "accountHolderName"));
+//    account.setAccountHolderType(getValue(accountData, "accountHolderType"));
 
     return account;
   }
@@ -419,6 +435,32 @@ public class Converters {
     }
 
     return null;
+  }
+
+  public static Map<String, String> createMetadata(ReadableMap readableMetadata) {
+    Map<String, String> metadata = new HashMap<String, String>();
+
+    ReadableMapKeySetIterator iterator = readableMetadata.keySetIterator();
+    while (iterator.hasNextKey()) {
+      String key = iterator.nextKey();
+      ReadableType type = readableMetadata.getType(key);
+
+      switch (type) {
+        case String:
+          metadata.put(key, getStringOrNull(readableMetadata, key));
+          break;
+        case Number:
+          metadata.put(key, new StringBuilder().append(readableMetadata.getDouble(key)).toString());
+          break;
+        case Boolean:
+          metadata.put(key, new StringBuilder().append(readableMetadata.getBoolean(key)).toString());
+          break;
+        default: // metadata should contains only strings
+          break;
+      }
+    }
+
+    return metadata;
   }
 
 }

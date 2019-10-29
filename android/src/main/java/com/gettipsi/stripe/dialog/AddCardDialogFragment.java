@@ -5,7 +5,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -27,9 +27,8 @@ import com.gettipsi.stripe.StripeModule;
 import com.gettipsi.stripe.util.CardFlipAnimator;
 import com.gettipsi.stripe.util.Converters;
 import com.gettipsi.stripe.util.Utils;
-import com.stripe.android.SourceCallback;
+import com.stripe.android.ApiResultCallback;
 import com.stripe.android.Stripe;
-import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Card;
 import com.stripe.android.model.Source;
 import com.stripe.android.model.SourceParams;
@@ -189,11 +188,8 @@ public class AddCardDialogFragment extends DialogFragment {
     doneButton.setEnabled(false);
     progressBar.setVisibility(View.VISIBLE);
     final CreditCard fromCard = from.getCreditCard();
-    final Card card = new Card(
-      fromCard.getCardNumber(),
-      fromCard.getExpMonth(),
-      fromCard.getExpYear(),
-      fromCard.getSecurityCode());
+    Card.Builder builder = new Card.Builder(fromCard.getCardNumber(), fromCard.getExpMonth(), fromCard.getExpYear(), fromCard.getSecurityCode());
+    final Card card = builder.build();
 
     String errorMessage = Utils.validateCard(card);
     if (errorMessage == null) {
@@ -201,7 +197,7 @@ public class AddCardDialogFragment extends DialogFragment {
         SourceParams cardSourceParams = SourceParams.createCardParams(card);
         StripeModule.getInstance().getStripe().createSource(
           cardSourceParams,
-          new SourceCallback() {
+          new ApiResultCallback<Source>() {
             @Override
             public void onSuccess(Source source) {
               // Normalize data with iOS SDK
@@ -228,8 +224,7 @@ public class AddCardDialogFragment extends DialogFragment {
       } else {
         StripeModule.getInstance().getStripe().createToken(
           card,
-          PUBLISHABLE_KEY,
-          new TokenCallback() {
+          new ApiResultCallback<Token>() {
             public void onSuccess(Token token) {
               if (promise != null) {
                 promise.resolve(Converters.convertTokenToWritableMap(token));
