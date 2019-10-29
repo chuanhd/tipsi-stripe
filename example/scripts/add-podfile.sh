@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "# Use iOS 9 and above
-platform :ios, '9.0'
+echo "# Use iOS 10 and above
+platform :ios, '10.0'
 
 target 'example' do
   pod 'Yoga', :path => '../node_modules/react-native/ReactCommon/yoga'
