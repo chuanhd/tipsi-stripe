@@ -707,11 +707,19 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
     if ([sourceType isEqualToString:@"alipay"]) {
         sourceParams = [STPSourceParams alipayParamsWithAmount:[[params objectForKey:@"amount"] unsignedIntegerValue] currency:params[@"currency"] returnURL:params[@"returnURL"]];
     }
+    if ([sourceType isEqualToString:@"wechat"]) {
+        sourceParams = [STPSourceParams wechatPayParamsWithAmount:[[params objectForKey:@"amount"] unsignedIntegerValue] currency:params[@"currency"] appId:params[@"appId"] statementDescriptor:params[@"statement_descriptor"]];
+    }
     if ([sourceType isEqualToString:@"card"]) {
         sourceParams = [STPSourceParams cardParamsWithCard:[self extractCardParamsFromDictionary:params]];
     }
+    
+    NSDictionary * metadata = [params objectForKey:@"metadata"];
+    if (metadata != NULL) {
+        [sourceParams setMetadata:metadata];
+    }
 
-    STPAPIClient* stripeAPIClient = [self newAPIClient];
+    STPAPIClient * stripeAPIClient = [STPAPIClient sharedClient];
 
     [stripeAPIClient createSourceWithParams:sourceParams completion:^(STPSource *source, NSError *error) {
         self->requestIsCompleted = YES;
@@ -720,13 +728,15 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
             NSDictionary *jsError = [self->errorCodes valueForKey:kErrorKeyApi];
             reject(jsError[kErrorKeyCode], error.localizedDescription, nil);
         } else {
-            if (source.redirect) {
                 self.redirectContext = [[STPRedirectContext alloc] initWithSource:source completion:^(NSString *sourceID, NSString *clientSecret, NSError *error) {
                     if (error) {
                         NSDictionary *jsError = [self->errorCodes valueForKey:kErrorKeyRedirectSpecific];
                         reject(jsError[kErrorKeyCode], error.localizedDescription, nil);
                     } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
                         [stripeAPIClient startPollingSourceWithId:sourceID clientSecret:clientSecret timeout:10 completion:^(STPSource *source, NSError *error) {
+#pragma clang diagnostic pop
                             if (error) {
                                 NSDictionary *jsError = [self->errorCodes valueForKey:kErrorKeyApi];
                                 reject(jsError[kErrorKeyCode], error.localizedDescription, nil);
@@ -761,10 +771,7 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
                         }];
                     }
                 }];
-                [self.redirectContext startSafariAppRedirectFlow];
-            } else {
-                resolve([self convertSourceObject:source]);
-            }
+                [self.redirectContext startRedirectFlowFromViewController:RCTPresentedViewController()];
         }
     }];
 }

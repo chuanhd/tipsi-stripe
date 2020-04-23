@@ -47,6 +47,24 @@ export default class SourceScreen extends PureComponent {
     }
   }
 
+  handleCreateWechatPaySourcePress = async () => {
+    console.log('handleCreateWechatPaySourcePress')
+    try {
+      this.setState({ loading: true, source: null })
+      console.log('WeChat: into try createSourceWithParams')
+      const source = await stripe.createSourceWithParams({
+        type: 'wechat',
+        amount: 50,
+        currency: 'HKD',
+        appId: 'wxe95bbecd40b34af9',
+        statement_descriptor: 'Order XXYYZZ',
+      })
+      this.setState({ loading: false, source })
+    } catch (error) {
+      this.setState({ loading: false })
+    }
+  }
+
   render() {
     const { error, loading, source } = this.state
 
@@ -67,7 +85,12 @@ export default class SourceScreen extends PureComponent {
           onPress={this.handleCreacteSourcePress}
           {...testID('sourceButton')}
         />
-
+        <Button
+          text="Create source for WechatPay payment"
+          loading={loading}
+          onPress={this.handleCreateWechatPaySourcePress}
+          {...testID('sourceButton')}
+        />
         {source && (
           <Text style={styles.source} {...testID('sourceObject')}>
             Source: {JSON.stringify(source)}

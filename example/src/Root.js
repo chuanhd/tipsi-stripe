@@ -16,7 +16,7 @@ import SetupIntentScreen from './scenes/SetupIntentScreen'
 import testID from './utils/testID'
 
 stripe.setOptions({
-  publishableKey: '<PUBLISHABLE_KEY>',
+  publishableKey: 'pk_live_wDwRwFjja10Hf6ILxE94zZEv00o28HsYCV',
   merchantId: '<MERCHANT_ID>',
   androidPayMode: 'test',
 })
