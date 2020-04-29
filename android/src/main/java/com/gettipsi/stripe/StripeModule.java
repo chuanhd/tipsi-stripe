@@ -26,9 +26,8 @@ import com.stripe.android.ApiResultCallback;
 import com.stripe.android.AppInfo;
 import com.stripe.android.PaymentIntentResult;
 import com.stripe.android.SetupIntentResult;
-import com.stripe.android.SourceCallback;
+import com.stripe.android.ApiResultCallback;
 import com.stripe.android.Stripe;
-import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Address;
 import com.stripe.android.model.ConfirmPaymentIntentParams;
 import com.stripe.android.model.ConfirmSetupIntentParams;
@@ -205,7 +204,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
       mStripe.createToken(
         createCard(cardData),
         mPublicKey,
-        new TokenCallback() {
+        new ApiResultCallback<Token>() {
           public void onSuccess(Token token) {
             promise.resolve(convertTokenToWritableMap(token));
           }
@@ -229,7 +228,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
         createBankAccount(accountData),
         mPublicKey,
         null,
-        new TokenCallback() {
+        new ApiResultCallback<Token>() {
           public void onSuccess(Token token) {
             promise.resolve(convertTokenToWritableMap(token));
           }
@@ -433,7 +432,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
 
     ArgCheck.nonNull(sourceParams);
 
-    mStripe.createSource(sourceParams, new SourceCallback() {
+    mStripe.createSource(sourceParams, new ApiResultCallback<Source>() {
       @Override
       public void onError(Exception error) {
         promise.reject(toErrorCode(error));
