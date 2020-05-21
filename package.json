@@ -1,6 +1,6 @@
 {
   "name": "tipsi-stripe",
-  "version": "8.0.0-beta.10",
+  "version": "9.0.0",
   "description": "React Native Stripe binding for iOS/Android platforms",
   "main": "src/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tipsi/tipsi-stripe.git"
+    "url": "git+https://github.com/chuanhd/tipsi-stripe.git"
   },
   "keywords": [
     "react",
