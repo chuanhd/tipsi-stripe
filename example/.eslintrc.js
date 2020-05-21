@@ -1,5 +1,6 @@
 module.exports = {
-  extends: ['tipsi', 'plugin:prettier/recommended', 'prettier/react'],
+  root: true,
+  extends: ['tipsi', 'plugin:prettier/recommended', 'prettier/react','@react-native-community'],
   env: {
     browser: true,
     commonjs: true,

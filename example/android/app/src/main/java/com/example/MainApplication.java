@@ -6,7 +6,10 @@ import com.facebook.react.ReactApplication;
 import com.gettipsi.stripe.StripeReactPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.shell.MainReactPackage;
+import android.util.Log;
+import com.facebook.react.PackageList;
+import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
+import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.soloader.SoLoader;
 
 import java.util.Arrays;
@@ -22,10 +25,16 @@ public class MainApplication extends Application implements ReactApplication {
 
     @Override
     protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage(),
-        new StripeReactPackage()
-      );
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      // Packages that cannot be autolinked yet can be added manually here, for example:
+      // packages.add(new MyReactNativePackage());
+      // packages.add(new StripeReactPackage());
+      return packages;
+
+      // return Arrays.<ReactPackage>asList(
+      //   new MainReactPackage(),
+      //   new StripeReactPackage()
+      // );
     }
   };
 
@@ -38,5 +47,6 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
+
   }
 }

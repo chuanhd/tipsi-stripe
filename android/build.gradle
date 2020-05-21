@@ -13,8 +13,8 @@ apply plugin: 'com.android.library'
 
 def DEFAULT_COMPILE_SDK_VERSION             = 28
 def DEFAULT_TARGET_SDK_VERSION              = 28
-def DEFAULT_GOOGLE_PLAY_SERVICES_VERSION    = '11.8.0'
-def DEFAULT_FIREBASE_MESSAGING_VERSION      = '11.8.0'
+def DEFAULT_GOOGLE_PLAY_SERVICES_VERSION    = '17.0.0'
+def DEFAULT_FIREBASE_MESSAGING_VERSION      = '17.0.0'
 
 android {
   compileSdkVersion rootProject.hasProperty('compileSdkVersion') ? rootProject.compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION
@@ -43,12 +43,12 @@ dependencies {
 
   implementation fileTree(include: ['*.jar'], dir: 'libs')
   implementation 'com.facebook.react:react-native:+'
-  implementation 'com.android.support:support-v4:28.0.0'
-  implementation 'com.android.support:appcompat-v7:28.0.0'
+//  implementation 'com.android.support:support-v4:28.0.0'
+//  implementation 'com.android.support:appcompat-v7:28.0.0'
   implementation "com.google.android.gms:play-services-wallet:$googlePlayServicesVersion"
   implementation "com.google.firebase:firebase-core:$firebaseVersion"
   implementation 'com.stripe:stripe-android:14.3.0'
-  implementation 'com.github.tipsi:CreditCardEntry:1.5.1'
+  implementation 'com.github.chuanhd:CreditCardEntry:v1.5.2'
 }
 repositories {
   google()

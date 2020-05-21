@@ -1,7 +1,7 @@
 package com.gettipsi.stripe.util;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.facebook.react.bridge.Arguments;
@@ -29,6 +29,7 @@ import com.stripe.android.model.SourceOwner;
 import com.stripe.android.model.SourceReceiver;
 import com.stripe.android.model.SourceRedirect;
 import com.stripe.android.model.Token;
+import com.stripe.android.model.WeChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -198,10 +199,10 @@ public class Converters {
       .addressState(getValue(cardData, "addressState"))
       .addressZip(getValue(cardData, "addressZip"))
       .addressCountry(getValue(cardData, "addressCountry"))
-      .brand(CardBrand.valueOf(getValue(cardData, "brand")))
+      .brand(CardBrand.Companion.fromCardNumber(cardData.getString("number")))
       .last4(getValue(cardData, "last4"))
       .fingerprint(getValue(cardData, "fingerprint"))
-      .funding(CardFunding.valueOf(getValue(cardData, "funding")))
+      .funding(null)
       .country(getValue(cardData, "country"))
       .currency(getValue(cardData, "currency"))
       .id(getValue(cardData, "id"))
@@ -234,6 +235,10 @@ public class Converters {
     newSource.putString("type", source.getType());
     newSource.putString("typeRaw", source.getTypeRaw());
     newSource.putString("usage", source.getUsage());
+
+    if (source.getWeChat() != null) {
+      newSource.putMap("wechat", convertWeChatDataToWritableMap(source.getWeChat()));
+    }
 
     return newSource;
   }
@@ -486,6 +491,21 @@ public class Converters {
     putIfNotEmpty(result, "phoneNumber", address.getPhoneNumber());
     putIfNotEmpty(result, "postalCode", address.getPostalCode());
     putIfNotEmpty(result, "sortingCode", address.getSortingCode());
+
+    return result;
+  }
+
+  public static WritableMap convertWeChatDataToWritableMap(final WeChat weChatData) {
+    WritableMap result = Arguments.createMap();
+    if (weChatData == null) return result;
+
+    putIfNotEmpty(result, "appId", weChatData.getAppId());
+    putIfNotEmpty(result, "partnerId", weChatData.getPartnerId());
+    putIfNotEmpty(result, "prepayId", weChatData.getPrepayId());
+    putIfNotEmpty(result, "packageValue", weChatData.getPackageValue());
+    putIfNotEmpty(result, "nonceStr", weChatData.getNonce());
+    putIfNotEmpty(result, "timeStamp", weChatData.getTimestamp());
+    putIfNotEmpty(result, "sign", weChatData.getSign());
 
     return result;
   }

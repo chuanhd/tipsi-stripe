@@ -1,12 +1,16 @@
 package com.gettipsi.stripe;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import android.os.Debug;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -24,6 +28,7 @@ import com.gettipsi.stripe.util.Fun0;
 import com.google.android.gms.wallet.WalletConstants;
 import com.stripe.android.ApiResultCallback;
 import com.stripe.android.AppInfo;
+import com.stripe.android.PaymentConfiguration;
 import com.stripe.android.PaymentIntentResult;
 import com.stripe.android.SetupIntentResult;
 import com.stripe.android.ApiResultCallback;
@@ -141,9 +146,13 @@ public class StripeModule extends ReactContextBaseJavaModule {
       ArgCheck.notEmptyString(newPubKey);
 
       mPublicKey = newPubKey;
+      final Context context = getReactApplicationContext();
+      PaymentConfiguration.init(context, mPublicKey);
+
       Stripe.setAppInfo(AppInfo.create(APP_INFO_NAME, APP_INFO_VERSION, APP_INFO_URL));
-      mStripe = new Stripe(getReactApplicationContext(), mPublicKey);
-      getPayFlow().setPublishableKey(mPublicKey);
+      mStripe = new Stripe(getReactApplicationContext(), PaymentConfiguration.getInstance(context).getPublishableKey());
+      getPayFlow().setPublishableKey(PaymentConfiguration.getInstance(context).getPublishableKey());
+
     }
 
     if (newAndroidPayMode != null) {
@@ -431,10 +440,10 @@ public class StripeModule extends ReactContextBaseJavaModule {
     SourceParams sourceParams = extractSourceParams(options);
 
     ArgCheck.nonNull(sourceParams);
-
     mStripe.createSource(sourceParams, new ApiResultCallback<Source>() {
       @Override
       public void onError(Exception error) {
+        Log.d("Stripe", "Create source with params error: " + error);
         promise.reject(toErrorCode(error));
       }
 
@@ -617,6 +626,9 @@ public class StripeModule extends ReactContextBaseJavaModule {
 
   private SourceParams extractSourceParams(final ReadableMap options) {
     String sourceType = options.getString("type");
+
+    Log.d("Stripe", new StringBuilder().append("extractSourceParams: ").append(sourceType).toString());
+
     SourceParams sourceParams = null;
     switch (sourceType) {
       case "alipay":
@@ -675,6 +687,13 @@ public class StripeModule extends ReactContextBaseJavaModule {
         break;
       case "card":
         sourceParams = SourceParams.createCardParams(Converters.createCard(options));
+        break;
+      case "wechat":
+        sourceParams = SourceParams.createWeChatPayParams(
+          options.getInt("amount"),
+          options.getString("currency"),
+          options.getString("appId"),
+          options.getString("statement_descriptor"));
         break;
     }
     return sourceParams;

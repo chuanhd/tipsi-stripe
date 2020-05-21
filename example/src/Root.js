@@ -22,7 +22,7 @@ stripe.setOptions({
 })
 
 // can also be set to null if you want to clear
-stripe.setStripeAccount('<STRIPE_ACCOUNT>')
+// stripe.setStripeAccount('<STRIPE_ACCOUNT>')
 
 export default class Root extends PureComponent {
   state = {
