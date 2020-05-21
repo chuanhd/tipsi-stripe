@@ -37,6 +37,7 @@ export const availableSourceTypes = [
   'threeDSecure',
   'alipay',
   'card',
+  'wechat'
 ]
 
 /** Keys are lower-cased slug|string */
