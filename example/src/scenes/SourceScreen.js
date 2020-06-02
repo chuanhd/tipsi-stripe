@@ -37,8 +37,8 @@ export default class SourceScreen extends PureComponent {
 
       const source = await stripe.createSourceWithParams({
         type: 'alipay',
-        amount: 50,
-        currency: 'EUR',
+        amount: 500,
+        currency: 'HKD',
         returnURL: 'example://stripe-redirect',
       })
       this.setState({ loading: false, source })

@@ -236,7 +236,7 @@ public class Converters {
     newSource.putString("typeRaw", source.getTypeRaw());
     newSource.putString("usage", source.getUsage());
 
-    if (source.getWeChat() != null) {
+    if (source.getType() == "wechat" && source.getWeChat() != null) {
       newSource.putMap("wechat", convertWeChatDataToWritableMap(source.getWeChat()));
     }
 
