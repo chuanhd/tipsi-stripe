@@ -728,6 +728,7 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
             NSDictionary *jsError = [self->errorCodes valueForKey:kErrorKeyApi];
             reject(jsError[kErrorKeyCode], error.localizedDescription, nil);
         } else {
+            if (source.redirect) {
                 self.redirectContext = [[STPRedirectContext alloc] initWithSource:source completion:^(NSString *sourceID, NSString *clientSecret, NSError *error) {
                     if (error) {
                         NSDictionary *jsError = [self->errorCodes valueForKey:kErrorKeyRedirectSpecific];
@@ -772,6 +773,9 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
                     }
                 }];
                 [self.redirectContext startRedirectFlowFromViewController:RCTPresentedViewController()];
+            } else {
+                resolve([self convertSourceObject:source]);
+            }
         }
     }];
 }
